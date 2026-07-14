@@ -2,6 +2,12 @@
 
 `yanxu-web` 建立在 [`yanxu-html`](https://github.com/YanXuLang/yanxu-html) 与 [`yanxu-http`](https://github.com/YanXuLang/yanxu-http) 之上，提供应用对象、路由器、路径参数、请求上下文、中间件、统一错误处理、HTML/JSON/言据响应、静态文件服务和本地开发服务器。
 
+当前言序 1.1.4 的包权限要求依赖源码位于显式文件根内，因此本仓库用 Git submodule 固定两个下层库。克隆时请带上递归子模块：
+
+```sh
+git clone --recurse-submodules https://github.com/yanxulang/yanxu-web.git
+```
+
 ## 快速开始
 
 ```yanxu

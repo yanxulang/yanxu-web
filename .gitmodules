@@ -1,0 +1,6 @@
+[submodule "deps/yanxu-html"]
+	path = deps/yanxu-html
+	url = https://github.com/yanxulang/yanxu-html.git
+[submodule "deps/yanxu-http"]
+	path = deps/yanxu-http
+	url = https://github.com/yanxulang/yanxu-http.git
