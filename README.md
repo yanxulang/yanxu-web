@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml/badge.svg)](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Yanxu 1.1.4-A](https://img.shields.io/badge/言序-1.1.4--A-b33.svg)](https://github.com/yanxulang/yanxu/releases/tag/v1.1.4-A)
+[![Yanxu 1.1.5](https://img.shields.io/badge/言序-1.1.5-b33.svg)](https://github.com/yanxulang/yanxu)
 
 言枢是面向言序的 Web 应用框架。技术包标识与仓库地址继续使用`yanxu-web`，应用源码建议把它引为`言枢`：
 
@@ -94,7 +94,7 @@
 
 ```sh
 git clone https://github.com/yanxulang/yanxu-web.git
-yanbao --manifest-path yanxu-web install
+yanbao install --manifest-path yanxu-web
 yanxu 查 yanxu-web/src/言序Web.yx
 yanxu 试 yanxu-web/tests --并发 1 --json
 ```
@@ -116,4 +116,4 @@ yanxu 试 yanxu-web/tests --并发 1 --json
 - [0.2 迁移说明](docs/migration-0.2.md)
 - [完整言枢博客](https://github.com/yanxulang/yanxu-webblog)
 
-当前版本为`0.2.0`，按[MIT License](LICENSE)发布。
+当前版本为`0.2.1`，并以清单格式 2 显式导出默认框架模块与`言标`子模块。按[MIT License](LICENSE)发布。

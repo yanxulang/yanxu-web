@@ -18,7 +18,7 @@ yanxu-web = { git = "https://github.com/yanxulang/yanxu-web.git", 修订 = "main
 ```
 
 ```sh
-yanbao --manifest-path my-site install
+yanbao install --manifest-path my-site
 ```
 
 ## 2. 配置并创建应用
