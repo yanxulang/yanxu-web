@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Yanxu 1.1.4
+        run: |
+          git clone --depth 1 --branch v1.1.4 https://github.com/YanXuLang/yanxu.git .yanxu
+          cargo build --manifest-path .yanxu/Cargo.toml --locked
+      - name: Resolve, check and test
+        run: |
+          .yanxu/target/debug/yanxu 包 锁 .
+          .yanxu/target/debug/yanxu 查 src/言序Web.yx
+          .yanxu/target/debug/yanxu 试 tests --json

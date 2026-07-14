@@ -1,0 +1,20 @@
+[包]
+格式 = 1
+名 = "yanxu-web"
+版 = "0.1.0"
+入口 = "src/言序Web.yx"
+说明 = "建立在 yanxu-html 与 yanxu-http 之上的言序 Web 框架"
+许可 = "MIT"
+作者 = ["言序团队"]
+
+[依赖]
+yanxu-html = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "main", 版 = "^0.1" }
+yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "main", 版 = "^0.1" }
+
+[权限]
+文件 = ["."]
+网络 = []
+TCP监听 = ["127.0.0.1", "::1", "localhost"]
+UDP绑定 = []
+环境 = []
+进程 = false
