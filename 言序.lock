@@ -1,5 +1,5 @@
 lock_version = 1
-manifest_checksum = "81cace531843377f09ce33bb94106769a29ff73a1f8ef9fb0a92e80affd38d26"
+manifest_checksum = "786e069f1a2ecaee77e7e6aada6c8d75dcf7a190636d90c55760174ddc0e40a1"
 
 [[package]]
 name = "yanxu-html"
