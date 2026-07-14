@@ -3,6 +3,7 @@
 引「包:yanxu-html」为 HTML；
 引「标准:测试」为 测试；
 引「标准:字节」为 字节；
+引「标准:文件」为 文件；
 
 法 文章（上下文）则
     归 Web.HTML响应（HTML.元素（「h1」，【】，【HTML.文字（「文章：」加 上下文.参数值（「id」））】））；
@@ -41,14 +42,19 @@
 定 已处理 为 应用.处理（HTTP.解析请求头（「GET /boom HTTP/1.1\r\nHost: localhost」））；
 测试.相等（字节.转文字（已处理.正文），「{\"error\":\"handled\"}」）；
 
+令 静态根：文 为「tests/fixtures」；
+若 文件.存在（「yanxu-web/tests/fixtures/site.css」）则
+    置 静态根 为「yanxu-web/tests/fixtures」；
+终
+
 令 已拒绝穿越：理 为 假；
 试 则
-    Web.静态文件响应（「yanxu-web/tests/fixtures」，「../言序.toml」）；
+    Web.静态文件响应（静态根，「../言序.toml」）；
 救 所误 则
     置 已拒绝穿越 为 真；
 终
 测试.断言（已拒绝穿越，「静态目录穿越必须被拒绝」）；
 
-定 静态响应 为 Web.静态文件响应（「yanxu-web/tests/fixtures」，「site.css」）；
+定 静态响应 为 Web.静态文件响应（静态根，「site.css」）；
 测试.相等（静态响应.首部值（「content-type」），「text/css; charset=utf-8」）；
 测试.相等（字节.转文字（静态响应.正文），「body { color: #b33; }\n」）；
