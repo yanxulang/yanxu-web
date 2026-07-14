@@ -21,4 +21,4 @@ jobs:
         run: |
           yanbao --manifest-path . install
           .yanxu/target/debug/yanxu 查 src/言序Web.yx
-          .yanxu/target/debug/yanxu 试 tests --json
+          .yanxu/target/debug/yanxu 试 tests --并发 1 --json

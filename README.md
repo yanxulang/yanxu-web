@@ -1,127 +1,119 @@
-# yanxu-web
+# 言枢
 
 [![CI](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml/badge.svg)](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Yanxu 1.1.4-A](https://img.shields.io/badge/言序-1.1.4--A-b33.svg)](https://github.com/yanxulang/yanxu/releases/tag/v1.1.4-A)
 
-`yanxu-web` 是建立在[`yanxu-html`](https://github.com/yanxulang/yanxu-html)和[`yanxu-http`](https://github.com/yanxulang/yanxu-http)之上的轻量 Web 框架。它把协议请求交给路由、中间件和处理器，再统一生成安全 HTML、JSON、言据、文字、字节或静态文件响应。
+言枢是面向言序的 Web 应用框架。技术包标识与仓库地址继续使用`yanxu-web`，应用源码建议把它引为`言枢`：
 
-```text
-yanxu-web       应用 · 路由 · 上下文 · 中间件 · 静态文件 · 开发服务器
-    ├── yanxu-html   节点 · 自动转义 · 组件 · 文档
-    └── yanxu-http   HTTP/1.1 请求 · 响应 · Cookie · 连接处理
+```yanxu
+引「包:yanxu-web」为 言枢；
 ```
 
-## 主要能力
+0.2 在原有路由、中间件和开发服务器之上加入配置、命名路由、反向 URL、路由组、自定义状态处理器、JSON 正文、无端口测试客户端，以及内建模板子项目“言标”。
 
-- `Web应用`统一持有路由器、共享状态、中间件与错误处理器；
-- 支持静态路径、`:参数`路径和末尾`*通配`路径；
-- 自动区分 404 与 405，并为 405 设置`Allow`；
-- 中间件使用`法（上下文，下一步）`洋葱式组合；
-- 处理器通过`Web上下文`读取路径参数、查询、首部、Cookie 和应用状态；
-- `HTML响应`只接受 HTML 节点并进入`yanxu-html`安全渲染；
-- 静态文件服务拒绝绝对路径、反斜杠、NUL、`.`和`..`路径段；
-- 提供串行、一连接一请求的本地开发服务器。
+```text
+言枢（yanxu-web）
+├── 应用配置 · 路由组 · 命名路由 · 反向 URL
+├── 请求上下文 · 中间件 · 404/405/500 · 测试客户端
+├── 言标：自动转义 · 条件 · 循环 · 包含 · 模板继承
+├── 静态文件 · 开发服务器
+├── yanxu-html：底层 HTML 节点与安全规则
+└── yanxu-http：HTTP/1.1 请求与响应
+```
 
-## 安装
+## 快速开始
 
-仓库只保存自己的源码；`yanxu-html`和`yanxu-http`由言包按`言序.toml`与`言序.lock`安装：
+```yanxu
+引「包:yanxu-web」为 言枢；
+
+定 配置项 为 言枢.配置（）
+    .设应用名（「我的站点」）
+    .设模板根（「templates」）
+    .设静态根（「static」）；
+
+定 应用 为 言枢.创建应用（配置项）；
+
+法 首页（上下文）则
+    归 应用.模板响应（「home.yb.html」，{
+        「标题」：「你好，言枢」，
+        「文章地址」：上下文.反向（「文章详情」，{「id」：「first」}）
+    }）；
+终
+
+法 文章（上下文）则
+    归 言枢.JSON响应（{「id」：上下文.参数值（「id」）}）；
+终
+
+应用.命名取（「/」，「首页」，首页）；
+应用.命名取（「/posts/:id」，「文章详情」，文章）；
+应用.挂配置静态（「/static」）；
+
+言枢.服务器（应用，「127.0.0.1:8080」）.运行（）；
+```
+
+`templates/home.yb.html`使用言标语法：
+
+```html
+<!doctype html>
+<h1>{{ 标题 }}</h1>
+<a href="{{ 文章地址 }}">阅读文章</a>
+```
+
+插值默认 HTML 转义。条件、循环、包含和继承都使用中文控制词：
+
+```html
+{% 承 base.yb.html %}
+{% 块 主体 %}
+  {% 若 已登录 %}<p>欢迎，{{ 用户.姓名 }}</p>{% 否则 %}<p>请登录</p>{% 终若 %}
+  {% 逐 文章 于 文章列 %}<a href="{{ 文章.url }}">{{ 文章.title }}</a>{% 终逐 %}
+{% 终块 %}
+```
+
+## 框架能力
+
+- `言枢配置`集中管理应用名、模板根、静态根、调试标记和默认 CSP；
+- 静态、`:参数`和末尾`*通配`路由，自动区分 404 与 405；
+- 命名路由、命名空间路由组与百分号编码的反向 URL；
+- GET、POST、PUT、PATCH、DELETE 便捷注册；
+- 洋葱式中间件、可替换 404/405 和统一 500 错误边界；
+- 上下文读取路径、查询、首部、Cookie、正文、JSON、AJAX 标记和应用状态；
+- HTML 节点、言标模板、JSON、言据、文字、字节、重定向和空响应；
+- 静态目录穿越防护与默认安全响应首部；
+- `言枢测试客户端`直接驱动完整应用链，不占用 TCP 端口。
+
+## 言标安全模型
+
+`{{ 值 }}`总是 HTML 转义；模板文件中的静态 HTML 原样保留。动态内容只有经`言枢.言标.信任HTML（内容）`显式包装后才能绕过转义。可信包装是审计边界，不是清洗器，不能接收用户、数据库、接口或文件中的未审计内容。
+
+模板文件必须使用`.yb.html`扩展名。加载器拒绝绝对路径、反斜杠、NUL、`.`、`..`、循环包含和超过 16 层的包含链，单模板源码上限为 256 KiB。
+
+完整语法见[言标参考](docs/yanbiao.md)。
+
+## 安装与测试
 
 ```sh
 git clone https://github.com/yanxulang/yanxu-web.git
 yanbao --manifest-path yanxu-web install
+yanxu 查 yanxu-web/src/言序Web.yx
+yanxu 试 yanxu-web/tests --并发 1 --json
 ```
 
-在自己的项目中，用言包添加代码直接引用的包：
+言包按`言序.toml`安装`yanxu-html`和`yanxu-http`，`言序.lock`固定精确提交与内容校验。并发规格会让多个进程同时检出同一 Git 缓存，因此仓库门禁使用`--并发 1`。
 
-```sh
-yanbao --manifest-path . add yanxu-web \
-  --git https://github.com/yanxulang/yanxu-web.git \
-  --rev main --version '^0.1'
-yanbao --manifest-path . add yanxu-html \
-  --git https://github.com/yanxulang/yanxu-html.git \
-  --rev main --version '^0.1'
-yanbao --manifest-path . install
-```
+## 兼容与边界
 
-框架自身声明的`yanxu-http`会作为传递依赖解析；应用若直接`引「包:yanxu-http」`，也应通过言包把它声明为顶层依赖。顶层锁文件中的同名依赖优先，确保整次检查和运行使用同一精确版本。
+0.1 的`Web.应用()`、`Web应用`、`Web上下文`、`Web开发服务器`和响应工厂继续可用；新代码建议使用“言枢”模块别名、`创建应用`、`言枢应用`、`言枢上下文`和`服务器`。迁移清单见[0.2 迁移说明](docs/migration-0.2.md)。
 
-## 第一个应用
-
-```yanxu
-引「包:yanxu-web」为 Web；
-引「包:yanxu-html」为 HTML；
-
-法 首页（上下文）则
-    归 Web.HTML响应（HTML.文档（
-        HTML.元素（「html」，【HTML.属性（「lang」，「zh-CN」）】，【
-            HTML.元素（「body」，【】，【
-                HTML.元素（「h1」，【】，【HTML.文字（「言序 Web」）】）
-            】）
-        】）
-    ））；
-终
-
-法 文章（上下文）则
-    归 Web.JSON响应（{「id」：上下文.参数值（「id」）}）；
-终
-
-定 所应用 为 Web.应用（）；
-所应用.取（「/」，首页）；
-所应用.取（「/posts/:id」，文章）；
-所应用.挂静态（「/static」，「static」）；
-
-Web.开发服务器（所应用，「127.0.0.1:8080」）.运行（）；
-```
-
-运行前锁定依赖：
-
-```sh
-yanbao --manifest-path . install
-yanbao --manifest-path . run
-```
-
-## 中间件与错误边界
-
-```yanxu
-法 安全首部（上下文，下一步）则
-    定 响应 为 下一步（）；
-    响应.设首部（「x-content-type-options」，「nosniff」）；
-    归 响应；
-终
-
-法 错误响应（上下文，所误）则
-    归 Web.JSON响应（{「error」：「internal_error」}）；
-终
-
-所应用.使用（安全首部）；
-所应用.设错误处理器（错误响应）；
-```
-
-中间件与路由处理器都必须返回`yanxu-http`的`HTTP响应`。应用捕获路由处理期间的错误并交给统一错误处理器；错误处理器本身返回其他类型时会再次失败，避免静默生成无效响应。
-
-## 当前边界
-
-开发服务器继承`yanxu-http 0.1`的简单模型：HTTP/1.1、串行接受、一连接一请求、`Connection: close`。它用于本地开发、教学和集成验证，不包含 TLS、并发工作池、生产日志、优雅重启、长连接或反向代理信任管理。
-
-静态文件处理只在路径层阻止目录穿越，默认`Cache-Control: no-cache`；生产静态资产建议由经过配置的前置服务器或对象存储提供。
+开发服务器仍是串行 HTTP/1.1、一连接一请求、`Connection: close`模型，适合本地开发、教学和集成验证，不承诺 TLS、并发工作池、长连接、流式上传、生产日志或优雅重启。
 
 ## 文档
 
 - [入门教程](docs/getting-started.md)
-- [公开 API 参考](docs/api.md)
-- [架构、请求生命周期与扩展点](docs/architecture.md)
-- [言序文档站：Web 框架](https://docs.yanxu.dev/web/framework/)
-- [完整博客示例](https://github.com/yanxulang/yanxu-webblog)
+- [公开 API](docs/api.md)
+- [言标语法](docs/yanbiao.md)
+- [架构与请求生命周期](docs/architecture.md)
+- [0.2 迁移说明](docs/migration-0.2.md)
+- [完整言枢博客](https://github.com/yanxulang/yanxu-webblog)
 
-## 开发与验收
-
-始终从言序总工作区根目录运行：
-
-```sh
-YANXU_BIN=yanxu-language-new/target/debug/yanxu yanbao/target/debug/yanbao --manifest-path yanxu-web install
-yanxu-language-new/target/debug/yanxu 查 yanxu-web/src/言序Web.yx
-yanxu-language-new/target/debug/yanxu 试 yanxu-web/tests --json
-```
-
-当前版本是 `0.1.0`，按 [MIT License](LICENSE) 发布。跨库路线图见[Web 栈安全与路线图](https://docs.yanxu.dev/web/security-roadmap/)。
+当前版本为`0.2.0`，按[MIT License](LICENSE)发布。
