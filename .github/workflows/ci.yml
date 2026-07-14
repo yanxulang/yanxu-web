@@ -12,14 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build Yanxu 1.1.4
+      - name: Build Yanxu 1.1.4-A and install Yanbao 0.1.0
         run: |
-          git clone --depth 1 --branch v1.1.4 https://github.com/YanXuLang/yanxu.git .yanxu
+          git clone --depth 1 --branch v1.1.4-A https://github.com/YanXuLang/yanxu.git .yanxu
           cargo build --manifest-path .yanxu/Cargo.toml --locked
+          cargo install --git https://github.com/YanXuLang/yanbao.git --tag v0.1.0 --locked
       - name: Resolve, check and test
         run: |
-          .yanxu/target/debug/yanxu 包 锁 .
+          yanbao --manifest-path . install
           .yanxu/target/debug/yanxu 查 src/言序Web.yx
           .yanxu/target/debug/yanxu 试 tests --json

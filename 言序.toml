@@ -8,8 +8,8 @@
 作者 = ["言序团队"]
 
 [依赖]
-yanxu-html = { 路径 = "deps/yanxu-html", 版 = "^0.1" }
-yanxu-http = { 路径 = "deps/yanxu-http", 版 = "^0.1" }
+yanxu-html = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "main", 版 = "^0.1" }
+yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "main", 版 = "^0.1" }
 
 [权限]
 文件 = ["."]

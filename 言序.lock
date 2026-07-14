@@ -1,16 +1,18 @@
 lock_version = 1
-manifest_checksum = "657efe26d4d765b530b091140283d306691e5b62665a1f9e6c7b6014374678b0"
+manifest_checksum = "81cace531843377f09ce33bb94106769a29ff73a1f8ef9fb0a92e80affd38d26"
 
 [[package]]
 name = "yanxu-html"
 version = "0.1.0"
-source = "path:deps/yanxu-html"
-checksum = "fcc9b9fe120cbf35bcc63180b55e079567e18c90c274bb7f7b8494c5346c74ff"
+source = "git:https://github.com/yanxulang/yanxu-html.git"
+revision = "e55ccb3284f8382b133a29c4a505d2aa3835a828"
+checksum = "95b4ed9d20167acff64d0738f48370ad630315d673e8a5314e9be3323addc150"
 entry = "src/言序HTML.yx"
 
 [[package]]
 name = "yanxu-http"
 version = "0.1.0"
-source = "path:deps/yanxu-http"
-checksum = "95a746d382f013b5fac1c1af9f3de5fe473c4e302363ef827e2807cd57bc411a"
+source = "git:https://github.com/yanxulang/yanxu-http.git"
+revision = "aa0ca6a8443833cf3317be8a1708bff31c6e91d0"
+checksum = "78cafbc41bc7fb6302073a27ae6ca0318229da702009dff77b375383a11be122"
 entry = "src/言序HTTP.yx"
