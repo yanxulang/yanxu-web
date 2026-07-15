@@ -10,21 +10,17 @@ my-site/
 └── 言序.toml
 ```
 
-清单直接依赖技术包`yanxu-web`，源码把它引为`言枢`：
-
-```toml
-[依赖]
-yanxu-web = { git = "https://github.com/yanxulang/yanxu-web.git", 修订 = "main", 版 = "^0.2" }
-```
+使用言包添加框架依赖：
 
 ```sh
-yanbao install --manifest-path my-site
+cd my-site
+yanbao add web --version '^0.2'
 ```
 
 ## 2. 配置并创建应用
 
 ```yanxu
-引「包:yanxu-web」为 言枢；
+引「包:web」为 言枢；
 
 定 配置项 为 言枢.配置（）
     .设应用名（「我的站点」）
