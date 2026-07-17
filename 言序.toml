@@ -2,15 +2,15 @@
 格式 = 2
 名称 = "yanxu-web"
 版本 = "0.2.1"
-言序 = ">=1.1.5"
+言序 = ">=1.1.12"
 入口 = "src/言序Web.yx"
 说明 = "言枢：内建言标模板语言的言序 Web 应用框架"
 许可 = "MIT"
 作者 = ["言序团队"]
 
 [依赖]
-yanxu-html = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "main", 版 = "^0.1" }
-yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "main", 版 = "^0.1" }
+言页 = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "v1.0.0", 版 = "^1.0" }
+yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "v1.0.0", 版 = "^1.0" }
 
 [权限]
 文件 = ["."]
