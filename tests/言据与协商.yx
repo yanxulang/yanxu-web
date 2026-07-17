@@ -1,0 +1,88 @@
+引「../src/言序Web.yx」为 言枢；
+
+引「包:yanxu-http」为 HTTP；
+
+引「包:言据」为 言据；
+
+引「标准:测试」为 测试；
+
+引「标准:字节」为 字节；
+
+引「标准:JSON」为 JSON；
+
+法 言据回声（上下文） 则
+    归 言枢.言据值响应（上下文.言据正文（））；
+终
+
+法 受限回声（上下文） 则
+    归 言枢.言据值响应（上下文.言据正文为（{「最大字符」：8}））；
+终
+
+法 协商结果（上下文） 则
+    归 言枢.协商响应（上下文，{「格式」：「言枢」}）；
+终
+
+定 应用 为 言枢.创建应用（言枢.配置（））；
+
+应用.发（「/echo」，言据回声）；
+
+应用.发（「/limited」，受限回声）；
+
+应用.取（「/negotiated」，协商结果）；
+
+定 客户端 为 言枢.测试客户端（应用）；
+
+定 原值：典 为 {「乙」：2，「甲」：1}；
+
+定 言据响应 为 客户端.发（「/echo」，言据.序列化（原值），（言据.版本媒体类型 加 「; charset=utf-8」））；
+
+测试.相等（言据响应.状态码，200）；
+
+测试.相等（言据响应.首部值（「content-type」），（言据.版本媒体类型 加 「; charset=utf-8」））；
+
+测试.断言（言据.相同（言据.解析（字节.转文字（言据响应.正文）），原值），「言据正文须规范往返」）；
+
+测试.相等（客户端.发（「/echo」，「{}」，「application/json」）.状态码，415）；
+
+测试.相等（客户端.请求（「POST」，「/echo」）.状态码，415）；
+
+测试.相等（客户端.发（「/echo」，「{}」，言据.媒体类型）.状态码，400）；
+
+测试.相等（客户端.发（「/limited」，言据.序列化（原值），言据.媒体类型）.状态码，400）；
+
+法 取接受（值：文） 则
+    定 首部：文 为 （「GET /negotiated HTTP/1.1\nHost: testserver\nAccept: 」 加 值）；
+    归 应用.处理（HTTP.解析请求头（首部））；
+终
+
+定 默认响应 为 客户端.取（「/negotiated」）；
+
+测试.相等（默认响应.首部值（「content-type」），「application/json; charset=utf-8」）；
+
+测试.相等（JSON.解析（字节.转文字（默认响应.正文））【「格式」】，「言枢」）；
+
+定 精确言据 为 取接受（言据.版本媒体类型）；
+
+测试.相等（精确言据.状态码，200）；
+
+测试.相等（精确言据.首部值（「content-type」），（言据.版本媒体类型 加 「; charset=utf-8」））；
+
+测试.相等（精确言据.首部值（「vary」），「accept」）；
+
+测试.相等（言据.解析据（字节.转文字（精确言据.正文））【「格式」】，「言枢」）；
+
+测试.相等（取接受（「application/json」）.首部值（「content-type」），「application/json; charset=utf-8」）；
+
+测试.相等（取接受（「application/*」）.首部值（「content-type」），「application/json; charset=utf-8」）；
+
+测试.相等（取接受（「*/*」）.首部值（「content-type」），「application/json; charset=utf-8」）；
+
+测试.相等（取接受（「application/json; q=0.2, application/vnd.yanxu.yanju; version=1; q=0.8」）.首部值（「content-type」），（言据.版本媒体类型 加 「; charset=utf-8」））；
+
+测试.相等（取接受（「application/json; q=0, */*; q=0.5」）.首部值（「content-type」），（言据.版本媒体类型 加 「; charset=utf-8」））；
+
+测试.相等（取接受（「application/vnd.yanxu.yanju; q=0」）.状态码，406）；
+
+测试.相等（取接受（「application/vnd.yanxu.yanju; version=2」）.状态码，406）；
+
+测试.相等（取接受（「text/html」）.状态码，406）；

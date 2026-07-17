@@ -9,6 +9,7 @@
 作者 = ["言序团队"]
 
 [依赖]
+言据 = { git = "https://github.com/yanxulang/yanju.git", 修订 = "v1.2.0", 版 = "^1.2" }
 言页 = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "v1.0.0", 版 = "^1.0" }
 yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "v1.0.0", 版 = "^1.0" }
 
