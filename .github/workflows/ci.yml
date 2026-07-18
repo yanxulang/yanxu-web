@@ -281,19 +281,45 @@ jobs:
           "$yanxu" 包 锁 --离线 examples
           "$yanxu" 包 更新 benchmarks
           "$yanxu" 包 锁 --离线 benchmarks
+          normalize_lock() {
+            input="$1"
+            output="$2"
+            if [[ "$RUNNER_OS" == "Windows" ]]; then
+              # 1.1.12 会把原生路径分隔符计入包摘要；保留其余包图字段逐字节比较。
+              sed -E -e '/^generator = /d' -e '/^target = /d' -e '/^checksum = /d' \
+                -e 's/(#[0-9a-f]{12}-)[0-9a-f]{16}/\1<platform>/g' "$input" > "$output"
+            else
+              sed -e '/^generator = /d' -e '/^target = /d' "$input" > "$output"
+            fi
+          }
           compare_lock() {
             committed="$1"
             updated="$2"
             name="$3"
-            sed -e '/^generator = /d' -e '/^target = /d' "$committed" \
-              > "$RUNNER_TEMP/$name-committed.normalized"
-            sed -e '/^generator = /d' -e '/^target = /d' "$updated" \
-              > "$RUNNER_TEMP/$name-updated.normalized"
+            normalize_lock "$committed" "$RUNNER_TEMP/$name-committed.normalized"
+            normalize_lock "$updated" "$RUNNER_TEMP/$name-updated.normalized"
             cmp "$RUNNER_TEMP/$name-committed.normalized" "$RUNNER_TEMP/$name-updated.normalized"
           }
           compare_lock "$RUNNER_TEMP/root-committed.lock" 言序.lock root
           compare_lock "$RUNNER_TEMP/examples-committed.lock" examples/言序.lock examples
           compare_lock "$RUNNER_TEMP/benchmarks-committed.lock" benchmarks/言序.lock benchmarks
+
+          path_checksum() {
+            awk '$0 == "name = \"yanxu-web\"" { found = 1; next }
+              found && /^checksum = / { print; exit }' "$1"
+          }
+          test "$(path_checksum examples/言序.lock)" = \
+            "$(path_checksum benchmarks/言序.lock)"
+
+          cp 言序.lock "$RUNNER_TEMP/root-first.lock"
+          cp examples/言序.lock "$RUNNER_TEMP/examples-first.lock"
+          cp benchmarks/言序.lock "$RUNNER_TEMP/benchmarks-first.lock"
+          "$yanxu" 包 更新 .
+          "$yanxu" 包 更新 examples
+          "$yanxu" 包 更新 benchmarks
+          cmp "$RUNNER_TEMP/root-first.lock" 言序.lock
+          cmp "$RUNNER_TEMP/examples-first.lock" examples/言序.lock
+          cmp "$RUNNER_TEMP/benchmarks-first.lock" benchmarks/言序.lock
 
           find src tests examples benchmarks -type f -name '*.yx' -print | sort \
             > "$RUNNER_TEMP/sources.txt"
