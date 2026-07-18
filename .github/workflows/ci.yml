@@ -8,26 +8,254 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  quality:
+    name: Web 框架稳定版质量门禁
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: YanXuLang/yanxu
+          path: .yanxu/toolchain
+          ref: 0e66486b4723ba96ed0ee67a43f301a03da062d0 # yanxu 1.1.12
+      - name: 构建言序 1.1.12
+        run: cargo build --manifest-path .yanxu/toolchain/Cargo.toml --locked --release --bin yanxu
+      - name: 工具链、清单、权限与项目结构
+        shell: bash
+        run: |
+          set -euo pipefail
+          yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
+          "$yanxu" 版本 --json > "$RUNNER_TEMP/yanxu-version.json"
+          jq -e '.schema_version == 2 and .version == "1.1.12" and
+            .commit_sha == "0e66486b4723ba96ed0ee67a43f301a03da062d0"' \
+            "$RUNNER_TEMP/yanxu-version.json"
+          "$yanxu" 包 .
+
+          for file in README.md LICENSE CHANGELOG.md COMPATIBILITY.md SECURITY.md CONTRIBUTING.md \
+            docs/API.md docs/API_REFERENCE.md docs/GUIDE.md docs/ARCHITECTURE.md \
+            docs/MIGRATION.md docs/PERFORMANCE.md docs/SECURITY_MODEL.md \
+            docs/RELEASE_NOTES_1.0.0.md docs/yanbiao.md \
+            examples/无端口言访.yx benchmarks/路由与言访.yx; do
+            test -s "$file"
+          done
+
+          test "$(find src -type f -name '*.yx' | wc -l)" -eq 3
+          test "$(find tests -type f -name '*.yx' | wc -l)" -eq 14
+          test "$(find examples -type f -name '*.yx' | wc -l)" -eq 3
+          test "$(find benchmarks -type f -name '*.yx' | wc -l)" -eq 1
+          test "$(find src tests examples benchmarks -type f -name '*.yx' | wc -l)" -eq 21
+          test "$(find . -type f -name '*.md' -not -path './.yanxu/*' | wc -l)" -eq 14
+
+          grep -Fxq '格式 = 2' 言序.toml
+          grep -Fxq '名称 = "yanxu-web"' 言序.toml
+          grep -Fxq '版本 = "0.2.1"' 言序.toml
+          grep -Fxq '言序 = ">=1.1.12"' 言序.toml
+          grep -Fxq '许可 = "MIT"' 言序.toml
+          grep -Fxq '公 定 版本：文 为 「0.2.1」；' src/言序Web.yx
+          grep -Fxq '文件 = ["."]' 言序.toml
+          grep -Fxq '网络 = []' 言序.toml
+          grep -Fxq 'TCP监听 = ["127.0.0.1", "::1", "localhost"]' 言序.toml
+          grep -Fxq 'UDP绑定 = []' 言序.toml
+          grep -Fxq '环境 = []' 言序.toml
+          grep -Fxq '进程 = false' 言序.toml
+          grep -Fxq '原生扩展 = false' 言序.toml
+          grep -Fxq '默认 = "src/言序Web.yx"' 言序.toml
+          grep -Fxq '言标 = "src/言标.yx"' 言序.toml
+          grep -Fxq '言访测试 = "src/言访测试.yx"' 言序.toml
+
+          grep -Fq '言据 = { git = "https://github.com/yanxulang/yanju.git", 修订 = "v1.2.0", 版 = "^1.2" }' 言序.toml
+          grep -Fq '言页 = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
+          grep -Fq 'yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
+          grep -Fq '言访 = { git = "https://github.com/yanxulang/yanxu-request.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
+          test "$(grep -c '^\[\[package\]\]$' 言序.lock)" -eq 6
+          test "$(sed -n '/^\[root_dependencies\]/,/^\[root_dev_dependencies\]/p' 言序.lock | grep -c ' = ')" -eq 4
+          grep -Fq 'revision = "07642984f9de2378c77894168076ca47eac240e5"' 言序.lock
+          grep -Fq 'revision = "5d1481cf5f0c9b3c03a34c5d3d88d9dcd55386fa"' 言序.lock
+          grep -Fq 'revision = "8d5c206982325ae8ff9a258c87368f308bcd393a"' 言序.lock
+          grep -Fq 'revision = "74437f3bf9e317f8804ac9ba6a490a2f74360d33"' 言序.lock
+      - name: 格式、静态检查、机器 API 与文档
+        shell: bash
+        run: |
+          set -euo pipefail
+          yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
+          source_list="$RUNNER_TEMP/yanxu-web-sources.txt"
+          find src tests examples benchmarks -type f -name '*.yx' -print | sort > "$source_list"
+          test "$(wc -l < "$source_list")" -eq 21
+          while IFS= read -r file; do
+            "$yanxu" 格 "$file" | cmp - "$file"
+            "$yanxu" 查 "$file"
+          done < "$source_list"
+
+          "$yanxu" 文 --json src/言序Web.yx "$RUNNER_TEMP/default-api.json"
+          "$yanxu" 文 --json src/言访测试.yx "$RUNNER_TEMP/request-api.json"
+          ruby scripts/generate_api_reference.rb \
+            "$RUNNER_TEMP/default-api.json" "$RUNNER_TEMP/request-api.json" \
+            docs/API_REFERENCE.md --check
+          ruby scripts/verify_docs.rb \
+            "$RUNNER_TEMP/default-api.json" "$RUNNER_TEMP/request-api.json" .
+
+          for heading in '# 言枢' '## 安装' '## 五分钟示例' '## 主要能力' \
+            '## 会话与 CSRF' '## OpenAPI 扩展边界' '## 错误处理' \
+            '## 开发验证' '## 已知限制' '## 文档'; do
+            grep -Fxq "$heading" README.md
+          done
+          grep -Fq '[MIT License](LICENSE)' README.md
+      - name: 锁图、规格、对照、示例、基准与 Release 构建
+        shell: bash
+        run: |
+          set -euo pipefail
+          yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
+          export YANXU_CACHE="$RUNNER_TEMP/yanxu-cache"
+          cp 言序.lock "$RUNNER_TEMP/root-committed.lock"
+
+          "$yanxu" 包 更新 .
+          "$yanxu" 包 锁 --离线 .
+          sed '/^target = /d' "$RUNNER_TEMP/root-committed.lock" > "$RUNNER_TEMP/root-committed.normalized"
+          sed '/^target = /d' 言序.lock > "$RUNNER_TEMP/root-updated.normalized"
+          cmp "$RUNNER_TEMP/root-committed.normalized" "$RUNNER_TEMP/root-updated.normalized"
+
+          "$yanxu" 试 tests --并发 1 --json > "$RUNNER_TEMP/tests.json"
+          jq -e '.schema_version == 1 and .summary.total == 14 and .summary.passed == 14 and
+            .summary.failed == 0 and .summary.timedOut == 0' "$RUNNER_TEMP/tests.json"
+
+          "$yanxu" 兼容 tests --json > "$RUNNER_TEMP/compatibility.json"
+          jq -e '(.cases | length) == 14 and ([.cases[].passed] | all)' \
+            "$RUNNER_TEMP/compatibility.json"
+
+          "$yanxu" examples/无端口言访.yx > "$RUNNER_TEMP/example-tree.txt"
+          "$yanxu" 字节 examples/无端口言访.yx > "$RUNNER_TEMP/example-vm.txt"
+          cmp "$RUNNER_TEMP/example-tree.txt" "$RUNNER_TEMP/example-vm.txt"
+          for report in "$RUNNER_TEMP/example-tree.txt" "$RUNNER_TEMP/example-vm.txt"; do
+            test "$(wc -l < "$report")" -eq 1
+            grep -Fq 'OpenAPI」：「3.1.0」' "$report"
+            grep -Fq '姓名」：「子衿」' "$report"
+            grep -Fq '路由数」：1' "$report"
+          done
+
+          "$yanxu" --max-steps 10000000 benchmarks/路由与言访.yx -- 10 \
+            > "$RUNNER_TEMP/benchmark-tree.json"
+          "$yanxu" --max-steps 10000000 字节 benchmarks/路由与言访.yx -- 10 \
+            > "$RUNNER_TEMP/benchmark-vm.json"
+          for report in "$RUNNER_TEMP/benchmark-tree.json" "$RUNNER_TEMP/benchmark-vm.json"; do
+            jq -e '.["轮数"] == 10 and .["直接校验"] == 10 and .["言访校验"] == 10 and
+              (.["直接毫秒"] | type == "number") and (.["言访毫秒"] | type == "number")' "$report"
+          done
+
+          "$yanxu" 编 . --release -o "$RUNNER_TEMP/yanxu-web.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web.yxb"
+
+          unexpected="$(git diff --name-only -- . ':(exclude,top)言序.lock')"
+          test -z "$unexpected"
+          test -z "$(git ls-files --others --exclude-standard)"
+
+  compatibility:
+    name: 言序 1.1.12 · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: YanXuLang/yanxu
-          path: .yanxu
-          ref: 746490ad6e6875fe82451a0f1ed1b0fc00cb8a26 # yanxu 1.1.5
+          path: .yanxu/toolchain
+          ref: 0e66486b4723ba96ed0ee67a43f301a03da062d0 # yanxu 1.1.12
+      - name: 构建最低言序
+        run: cargo build --manifest-path .yanxu/toolchain/Cargo.toml --locked --release --bin yanxu
+      - name: 跨平台格式、规格、示例、对照与构建
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu.exe"
+            YANXU_CACHE="$(cygpath -w "$RUNNER_TEMP/yanxu-cache")"
+          else
+            yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
+            YANXU_CACHE="$RUNNER_TEMP/yanxu-cache"
+          fi
+          export YANXU_CACHE
+          "$yanxu" 版本 --json > "$RUNNER_TEMP/version.json"
+          jq -e '.version == "1.1.12" and
+            .commit_sha == "0e66486b4723ba96ed0ee67a43f301a03da062d0"' "$RUNNER_TEMP/version.json"
+
+          cp 言序.lock "$RUNNER_TEMP/root-committed.lock"
+          "$yanxu" 包 更新 .
+          "$yanxu" 包 锁 --离线 .
+          sed -e '/^generator = /d' -e '/^target = /d' "$RUNNER_TEMP/root-committed.lock" \
+            > "$RUNNER_TEMP/root-committed.normalized"
+          sed -e '/^generator = /d' -e '/^target = /d' 言序.lock \
+            > "$RUNNER_TEMP/root-updated.normalized"
+          cmp "$RUNNER_TEMP/root-committed.normalized" "$RUNNER_TEMP/root-updated.normalized"
+
+          find src tests examples benchmarks -type f -name '*.yx' -print | sort \
+            > "$RUNNER_TEMP/sources.txt"
+          test "$(wc -l < "$RUNNER_TEMP/sources.txt")" -eq 21
+          while IFS= read -r file; do
+            "$yanxu" 格 "$file" | cmp - "$file"
+            "$yanxu" 查 "$file"
+          done < "$RUNNER_TEMP/sources.txt"
+
+          "$yanxu" 试 tests --并发 1 --json > "$RUNNER_TEMP/tests.json"
+          jq -e '.summary.total == 14 and .summary.passed == 14 and
+            .summary.failed == 0 and .summary.timedOut == 0' "$RUNNER_TEMP/tests.json"
+          "$yanxu" 兼容 tests --json > "$RUNNER_TEMP/compatibility.json"
+          jq -e '(.cases | length) == 14 and ([.cases[].passed] | all)' \
+            "$RUNNER_TEMP/compatibility.json"
+
+          "$yanxu" examples/无端口言访.yx > "$RUNNER_TEMP/example-tree.txt"
+          "$yanxu" 字节 examples/无端口言访.yx > "$RUNNER_TEMP/example-vm.txt"
+          cmp "$RUNNER_TEMP/example-tree.txt" "$RUNNER_TEMP/example-vm.txt"
+          grep -Fq '姓名」：「子衿」' "$RUNNER_TEMP/example-tree.txt"
+
+          "$yanxu" --max-steps 10000000 benchmarks/路由与言访.yx -- 5 \
+            > "$RUNNER_TEMP/benchmark-tree.json"
+          "$yanxu" --max-steps 10000000 字节 benchmarks/路由与言访.yx -- 5 \
+            > "$RUNNER_TEMP/benchmark-vm.json"
+          for report in "$RUNNER_TEMP/benchmark-tree.json" "$RUNNER_TEMP/benchmark-vm.json"; do
+            jq -e '.["轮数"] == 5 and .["直接校验"] == 5 and .["言访校验"] == 5' "$report"
+          done
+
+          "$yanxu" 编 . --release -o "$RUNNER_TEMP/yanxu-web.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web.yxb"
+
+  metadata:
+    name: 新增元数据门禁
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          repository: YanXuLang/yanbao
-          path: .yanbao
-          ref: 7276968ef8c3c480d56e0570870963d4ae63ce2d # yanbao 0.2.0
-      - name: Build Yanxu 1.1.5
-        run: cargo build --manifest-path .yanxu/Cargo.toml --locked --bin yanxu
-      - name: Resolve, check and test
+          fetch-depth: 0
+      - name: 检查分支、PR 与新增提交
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          HEAD_BRANCH: ${{ github.head_ref || github.ref_name }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
         run: |
-          chmod +x .yanbao/yanbao
-          YANXU_BIN="$GITHUB_WORKSPACE/.yanxu/target/debug/yanxu" .yanbao/yanbao install --manifest-path .
-          .yanxu/target/debug/yanxu 查 src/言序Web.yx
-          .yanxu/target/debug/yanxu 试 tests --并发 1 --json
-          YANXU_BIN="$GITHUB_WORKSPACE/.yanxu/target/debug/yanxu" .yanbao/yanbao build --manifest-path . --release
+          set -euo pipefail
+          if printf '%s\n%s\n%s\n' "$HEAD_BRANCH" "$PR_TITLE" "$PR_BODY" | grep -Eiq 'co[d]ex'; then
+            echo '分支或 PR 元数据包含禁用词'
+            exit 1
+          fi
+
+          base="$BASE_SHA"
+          if [[ -z "$base" ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            default_ref="refs/remotes/origin/$DEFAULT_BRANCH"
+            if git show-ref --verify --quiet "$default_ref"; then
+              base="$(git merge-base HEAD "$default_ref")"
+            else
+              base="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+            fi
+          fi
+          if git log "$base"..HEAD --format='%H%n%an%n%ae%n%cn%n%ce%n%s%n%b' | grep -Eiq 'co[d]ex'; then
+            echo '新增提交元数据包含禁用词'
+            exit 1
+          fi
