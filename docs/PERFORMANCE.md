@@ -33,7 +33,7 @@
 
 ## 基准
 
-`benchmarks/路由与言访.yx`比较同一应用上的两条确定性路径：
+`benchmarks`是锁定言枢 1.x 路径依赖的独立消费者包。`benchmarks/路由与言访.yx`比较同一应用上的两条确定性路径：
 
 1. `言枢测试客户端`直接请求；
 2. 言访请求构建器经`言访测试`适配器请求。
@@ -42,7 +42,7 @@
 
 ```sh
 /tmp/yanxu-v1.1.12/target/release/yanxu \
-  yanxu-libraries-workspace/repos/yanxu-web/benchmarks/路由与言访.yx -- 20
+  yanxu-libraries-workspace/repos/yanxu-web/benchmarks/路由与言访.yx -- 10
 ```
 
 输出字段：

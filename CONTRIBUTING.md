@@ -66,7 +66,7 @@ YANXU_BIN=/tmp/yanxu-v1.1.12/target/release/yanxu \
   yanxu-libraries-workspace/repos/yanxu-web/examples/无端口言访.yx
 
 /tmp/yanxu-v1.1.12/target/release/yanxu \
-  yanxu-libraries-workspace/repos/yanxu-web/benchmarks/路由与言访.yx -- 20
+  yanxu-libraries-workspace/repos/yanxu-web/benchmarks/路由与言访.yx -- 10
 ```
 
 基准必须校验业务结果，并输出轮数、耗时和校验和。不要提交只打印速度但不验证正确性的负载。

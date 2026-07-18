@@ -33,12 +33,15 @@ jobs:
             .commit_sha == "0e66486b4723ba96ed0ee67a43f301a03da062d0"' \
             "$RUNNER_TEMP/yanxu-version.json"
           "$yanxu" 包 .
+          "$yanxu" 包 examples
+          "$yanxu" 包 benchmarks
 
           for file in README.md LICENSE CHANGELOG.md COMPATIBILITY.md SECURITY.md CONTRIBUTING.md \
             docs/API.md docs/API_REFERENCE.md docs/GUIDE.md docs/ARCHITECTURE.md \
             docs/MIGRATION.md docs/PERFORMANCE.md docs/SECURITY_MODEL.md \
             docs/RELEASE_NOTES_1.0.0.md docs/yanbiao.md \
-            examples/无端口言访.yx benchmarks/路由与言访.yx; do
+            examples/无端口言访.yx examples/言序.toml examples/言序.lock \
+            benchmarks/路由与言访.yx benchmarks/言序.toml benchmarks/言序.lock; do
             test -s "$file"
           done
 
@@ -67,12 +70,50 @@ jobs:
           grep -Fxq '言标 = "src/言标.yx"' 言序.toml
           grep -Fxq '言访测试 = "src/言访测试.yx"' 言序.toml
 
+          for manifest in examples/言序.toml benchmarks/言序.toml; do
+            grep -Fxq '格式 = 2' "$manifest"
+            grep -Fxq '版本 = "1.0.0"' "$manifest"
+            grep -Fxq '言序 = ">=1.1.12"' "$manifest"
+            grep -Fxq '许可 = "MIT"' "$manifest"
+            grep -Fxq '文件 = []' "$manifest"
+            grep -Fxq '网络 = []' "$manifest"
+            grep -Fxq 'UDP绑定 = []' "$manifest"
+            grep -Fxq '环境 = []' "$manifest"
+            grep -Fxq '进程 = false' "$manifest"
+            grep -Fxq '原生扩展 = false' "$manifest"
+            grep -Fxq 'yanxu-web = { 路径 = "..", 版 = "^1.0" }' "$manifest"
+          done
+          grep -Fxq '名称 = "yanxu-web-examples"' examples/言序.toml
+          grep -Fxq '入口 = "无端口言访.yx"' examples/言序.toml
+          grep -Fxq 'TCP监听 = ["127.0.0.1", "::1", "localhost"]' examples/言序.toml
+          grep -Fq '言据 = { git = "https://github.com/yanxulang/yanju.git", 修订 = "v1.2.0", 版 = "^1.2" }' examples/言序.toml
+          grep -Fxq '名称 = "yanxu-web-benchmark"' benchmarks/言序.toml
+          grep -Fxq '入口 = "路由与言访.yx"' benchmarks/言序.toml
+          grep -Fxq 'TCP监听 = []' benchmarks/言序.toml
+          grep -Fxq '引「包:yanxu-web」为 言枢；' examples/单次服务器.yx
+          grep -Fxq '引「包:yanxu-web」为 言枢；' examples/开发服务器.yx
+          grep -Fxq '引「包:yanxu-web/言访测试」为 言访测试；' examples/无端口言访.yx
+          grep -Fxq '引「包:yanxu-web/言访测试」为 言访测试；' benchmarks/路由与言访.yx
+
           grep -Fq '言据 = { git = "https://github.com/yanxulang/yanju.git", 修订 = "v1.2.0", 版 = "^1.2" }' 言序.toml
           grep -Fq '言页 = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
           grep -Fq 'yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
           grep -Fq '言访 = { git = "https://github.com/yanxulang/yanxu-request.git", 修订 = "v1.0.0", 版 = "^1.0" }' 言序.toml
           test "$(grep -c '^\[\[package\]\]$' 言序.lock)" -eq 6
           test "$(sed -n '/^\[root_dependencies\]/,/^\[root_dev_dependencies\]/p' 言序.lock | grep -c ' = ')" -eq 4
+          test "$(grep -c '^\[\[package\]\]$' examples/言序.lock)" -eq 7
+          test "$(sed -n '/^\[root_dependencies\]/,/^\[root_dev_dependencies\]/p' examples/言序.lock | grep -c ' = ')" -eq 2
+          test "$(grep -c '^\[\[package\]\]$' benchmarks/言序.lock)" -eq 7
+          test "$(sed -n '/^\[root_dependencies\]/,/^\[root_dev_dependencies\]/p' benchmarks/言序.lock | grep -c ' = ')" -eq 1
+          grep -Fq 'yanxu-web = "yanxu-web@1.0.0#' examples/言序.lock
+          grep -Fq 'yanxu-web = "yanxu-web@1.0.0#' benchmarks/言序.lock
+          grep -Fq 'source = "path:.."' examples/言序.lock
+          grep -Fq 'source = "path:.."' benchmarks/言序.lock
+          path_checksum() {
+            awk '$0 == "name = \"yanxu-web\"" { found = 1; next }
+              found && /^checksum = / { print; exit }' "$1"
+          }
+          test "$(path_checksum examples/言序.lock)" = "$(path_checksum benchmarks/言序.lock)"
           grep -Fq 'revision = "07642984f9de2378c77894168076ca47eac240e5"' 言序.lock
           grep -Fq 'revision = "5d1481cf5f0c9b3c03a34c5d3d88d9dcd55386fa"' 言序.lock
           grep -Fq 'revision = "8d5c206982325ae8ff9a258c87368f308bcd393a"' 言序.lock
@@ -111,16 +152,40 @@ jobs:
           yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
           export YANXU_CACHE="$RUNNER_TEMP/yanxu-cache"
           cp 言序.lock "$RUNNER_TEMP/root-committed.lock"
+          cp examples/言序.lock "$RUNNER_TEMP/examples-committed.lock"
+          cp benchmarks/言序.lock "$RUNNER_TEMP/benchmarks-committed.lock"
 
           "$yanxu" 包 更新 .
           "$yanxu" 包 锁 --离线 .
-          sed '/^target = /d' "$RUNNER_TEMP/root-committed.lock" > "$RUNNER_TEMP/root-committed.normalized"
-          sed '/^target = /d' 言序.lock > "$RUNNER_TEMP/root-updated.normalized"
-          cmp "$RUNNER_TEMP/root-committed.normalized" "$RUNNER_TEMP/root-updated.normalized"
+          "$yanxu" 包 更新 examples
+          "$yanxu" 包 锁 --离线 examples
+          "$yanxu" 包 更新 benchmarks
+          "$yanxu" 包 锁 --离线 benchmarks
+
+          compare_lock() {
+            committed="$1"
+            updated="$2"
+            name="$3"
+            sed '/^target = /d' "$committed" > "$RUNNER_TEMP/$name-committed.normalized"
+            sed '/^target = /d' "$updated" > "$RUNNER_TEMP/$name-updated.normalized"
+            cmp "$RUNNER_TEMP/$name-committed.normalized" "$RUNNER_TEMP/$name-updated.normalized"
+          }
+          compare_lock "$RUNNER_TEMP/root-committed.lock" 言序.lock root
+          compare_lock "$RUNNER_TEMP/examples-committed.lock" examples/言序.lock examples
+          compare_lock "$RUNNER_TEMP/benchmarks-committed.lock" benchmarks/言序.lock benchmarks
 
           "$yanxu" 试 tests --并发 1 --json > "$RUNNER_TEMP/tests.json"
           jq -e '.schema_version == 1 and .summary.total == 14 and .summary.passed == 14 and
             .summary.failed == 0 and .summary.timedOut == 0' "$RUNNER_TEMP/tests.json"
+          "$yanxu" 试 src --并发 1 --json > "$RUNNER_TEMP/src-cases.json"
+          "$yanxu" 试 examples --并发 1 --json > "$RUNNER_TEMP/example-cases.json"
+          "$yanxu" 试 benchmarks --并发 1 --json > "$RUNNER_TEMP/benchmark-cases.json"
+          jq -e '.summary.total == 3 and .summary.passed == 3 and .summary.failed == 0' \
+            "$RUNNER_TEMP/src-cases.json"
+          jq -e '.summary.total == 3 and .summary.passed == 3 and .summary.failed == 0' \
+            "$RUNNER_TEMP/example-cases.json"
+          jq -e '.summary.total == 1 and .summary.passed == 1 and .summary.failed == 0' \
+            "$RUNNER_TEMP/benchmark-cases.json"
 
           "$yanxu" 兼容 tests --json > "$RUNNER_TEMP/compatibility.json"
           jq -e '(.cases | length) == 14 and ([.cases[].passed] | all)' \
@@ -146,9 +211,22 @@ jobs:
           done
 
           "$yanxu" 编 . --release -o "$RUNNER_TEMP/yanxu-web.yxb"
+          "$yanxu" 编 examples --release -o "$RUNNER_TEMP/yanxu-web-examples.yxb"
+          "$yanxu" 编 benchmarks --release -o "$RUNNER_TEMP/yanxu-web-benchmark.yxb"
           test -s "$RUNNER_TEMP/yanxu-web.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web-examples.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web-benchmark.yxb"
 
-          unexpected="$(git diff --name-only -- . ':(exclude,top)言序.lock')"
+          "$yanxu" 行 "$RUNNER_TEMP/yanxu-web-examples.yxb" > "$RUNNER_TEMP/example-release.txt"
+          cmp "$RUNNER_TEMP/example-vm.txt" "$RUNNER_TEMP/example-release.txt"
+          "$yanxu" --max-steps 10000000 行 "$RUNNER_TEMP/yanxu-web-benchmark.yxb" -- 10 \
+            > "$RUNNER_TEMP/benchmark-release.json"
+          jq -e '.["轮数"] == 10 and .["直接校验"] == 10 and .["言访校验"] == 10 and
+            (.["直接毫秒"] | type == "number") and (.["言访毫秒"] | type == "number")' \
+            "$RUNNER_TEMP/benchmark-release.json"
+
+          unexpected="$(git diff --name-only -- . ':(exclude,top)言序.lock' \
+            ':(exclude,top)examples/言序.lock' ':(exclude,top)benchmarks/言序.lock')"
           test -z "$unexpected"
           test -z "$(git ls-files --others --exclude-standard)"
 
@@ -186,13 +264,27 @@ jobs:
             .commit_sha == "0e66486b4723ba96ed0ee67a43f301a03da062d0"' "$RUNNER_TEMP/version.json"
 
           cp 言序.lock "$RUNNER_TEMP/root-committed.lock"
+          cp examples/言序.lock "$RUNNER_TEMP/examples-committed.lock"
+          cp benchmarks/言序.lock "$RUNNER_TEMP/benchmarks-committed.lock"
           "$yanxu" 包 更新 .
           "$yanxu" 包 锁 --离线 .
-          sed -e '/^generator = /d' -e '/^target = /d' "$RUNNER_TEMP/root-committed.lock" \
-            > "$RUNNER_TEMP/root-committed.normalized"
-          sed -e '/^generator = /d' -e '/^target = /d' 言序.lock \
-            > "$RUNNER_TEMP/root-updated.normalized"
-          cmp "$RUNNER_TEMP/root-committed.normalized" "$RUNNER_TEMP/root-updated.normalized"
+          "$yanxu" 包 更新 examples
+          "$yanxu" 包 锁 --离线 examples
+          "$yanxu" 包 更新 benchmarks
+          "$yanxu" 包 锁 --离线 benchmarks
+          compare_lock() {
+            committed="$1"
+            updated="$2"
+            name="$3"
+            sed -e '/^generator = /d' -e '/^target = /d' "$committed" \
+              > "$RUNNER_TEMP/$name-committed.normalized"
+            sed -e '/^generator = /d' -e '/^target = /d' "$updated" \
+              > "$RUNNER_TEMP/$name-updated.normalized"
+            cmp "$RUNNER_TEMP/$name-committed.normalized" "$RUNNER_TEMP/$name-updated.normalized"
+          }
+          compare_lock "$RUNNER_TEMP/root-committed.lock" 言序.lock root
+          compare_lock "$RUNNER_TEMP/examples-committed.lock" examples/言序.lock examples
+          compare_lock "$RUNNER_TEMP/benchmarks-committed.lock" benchmarks/言序.lock benchmarks
 
           find src tests examples benchmarks -type f -name '*.yx' -print | sort \
             > "$RUNNER_TEMP/sources.txt"
@@ -205,6 +297,15 @@ jobs:
           "$yanxu" 试 tests --并发 1 --json > "$RUNNER_TEMP/tests.json"
           jq -e '.summary.total == 14 and .summary.passed == 14 and
             .summary.failed == 0 and .summary.timedOut == 0' "$RUNNER_TEMP/tests.json"
+          "$yanxu" 试 src --并发 1 --json > "$RUNNER_TEMP/src-cases.json"
+          "$yanxu" 试 examples --并发 1 --json > "$RUNNER_TEMP/example-cases.json"
+          "$yanxu" 试 benchmarks --并发 1 --json > "$RUNNER_TEMP/benchmark-cases.json"
+          jq -e '.summary.total == 3 and .summary.passed == 3 and .summary.failed == 0' \
+            "$RUNNER_TEMP/src-cases.json"
+          jq -e '.summary.total == 3 and .summary.passed == 3 and .summary.failed == 0' \
+            "$RUNNER_TEMP/example-cases.json"
+          jq -e '.summary.total == 1 and .summary.passed == 1 and .summary.failed == 0' \
+            "$RUNNER_TEMP/benchmark-cases.json"
           "$yanxu" 兼容 tests --json > "$RUNNER_TEMP/compatibility.json"
           jq -e '(.cases | length) == 14 and ([.cases[].passed] | all)' \
             "$RUNNER_TEMP/compatibility.json"
@@ -223,7 +324,17 @@ jobs:
           done
 
           "$yanxu" 编 . --release -o "$RUNNER_TEMP/yanxu-web.yxb"
+          "$yanxu" 编 examples --release -o "$RUNNER_TEMP/yanxu-web-examples.yxb"
+          "$yanxu" 编 benchmarks --release -o "$RUNNER_TEMP/yanxu-web-benchmark.yxb"
           test -s "$RUNNER_TEMP/yanxu-web.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web-examples.yxb"
+          test -s "$RUNNER_TEMP/yanxu-web-benchmark.yxb"
+          "$yanxu" 行 "$RUNNER_TEMP/yanxu-web-examples.yxb" > "$RUNNER_TEMP/example-release.txt"
+          cmp "$RUNNER_TEMP/example-vm.txt" "$RUNNER_TEMP/example-release.txt"
+          "$yanxu" --max-steps 10000000 行 "$RUNNER_TEMP/yanxu-web-benchmark.yxb" -- 5 \
+            > "$RUNNER_TEMP/benchmark-release.json"
+          jq -e '.["轮数"] == 5 and .["直接校验"] == 5 and .["言访校验"] == 5' \
+            "$RUNNER_TEMP/benchmark-release.json"
 
   metadata:
     name: 新增元数据门禁
