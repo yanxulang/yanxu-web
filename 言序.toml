@@ -12,6 +12,7 @@
 言据 = { git = "https://github.com/yanxulang/yanju.git", 修订 = "v1.2.0", 版 = "^1.2" }
 言页 = { git = "https://github.com/yanxulang/yanxu-html.git", 修订 = "v1.0.0", 版 = "^1.0" }
 yanxu-http = { git = "https://github.com/yanxulang/yanxu-http.git", 修订 = "v1.0.0", 版 = "^1.0" }
+言访 = { git = "https://github.com/yanxulang/yanxu-request.git", 修订 = "v1.0.0", 版 = "^1.0" }
 
 [权限]
 文件 = ["."]
@@ -25,6 +26,7 @@ UDP绑定 = []
 [导出]
 默认 = "src/言序Web.yx"
 言标 = "src/言标.yx"
+言访测试 = "src/言访测试.yx"
 
 [构建]
 目标 = "字节码"
