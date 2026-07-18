@@ -22,6 +22,8 @@ jobs:
           path: .yanxu/toolchain
           ref: 0e66486b4723ba96ed0ee67a43f301a03da062d0 # yanxu 1.1.12
       - name: 构建言序 1.1.12
+        env:
+          YANXU_BUILD_SHA: 0e66486b4723ba96ed0ee67a43f301a03da062d0
         run: cargo build --manifest-path .yanxu/toolchain/Cargo.toml --locked --release --bin yanxu
       - name: 工具链、清单、权限与项目结构
         shell: bash
@@ -246,6 +248,8 @@ jobs:
           path: .yanxu/toolchain
           ref: 0e66486b4723ba96ed0ee67a43f301a03da062d0 # yanxu 1.1.12
       - name: 构建最低言序
+        env:
+          YANXU_BUILD_SHA: 0e66486b4723ba96ed0ee67a43f301a03da062d0
         run: cargo build --manifest-path .yanxu/toolchain/Cargo.toml --locked --release --bin yanxu
       - name: 跨平台格式、规格、示例、对照与构建
         shell: bash
