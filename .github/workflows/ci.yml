@@ -258,6 +258,11 @@ jobs:
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu.exe"
             YANXU_CACHE="$(cygpath -w "$RUNNER_TEMP/yanxu-cache")"
+            export GIT_CONFIG_COUNT=2
+            export GIT_CONFIG_KEY_0=core.autocrlf
+            export GIT_CONFIG_VALUE_0=false
+            export GIT_CONFIG_KEY_1=core.eol
+            export GIT_CONFIG_VALUE_1=lf
           else
             yanxu="$GITHUB_WORKSPACE/.yanxu/toolchain/target/release/yanxu"
             YANXU_CACHE="$RUNNER_TEMP/yanxu-cache"
