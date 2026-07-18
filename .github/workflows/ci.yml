@@ -51,10 +51,11 @@ jobs:
 
           grep -Fxq '格式 = 2' 言序.toml
           grep -Fxq '名称 = "yanxu-web"' 言序.toml
-          grep -Fxq '版本 = "0.2.1"' 言序.toml
+          grep -Fxq '版本 = "1.0.0"' 言序.toml
           grep -Fxq '言序 = ">=1.1.12"' 言序.toml
           grep -Fxq '许可 = "MIT"' 言序.toml
-          grep -Fxq '公 定 版本：文 为 「0.2.1」；' src/言序Web.yx
+          grep -Fxq '公 定 版本：文 为 「1.0.0」；' src/言序Web.yx
+          grep -Fxq '公 定 版本：文 为 「1.0.0」；' src/言标.yx
           grep -Fxq '文件 = ["."]' 言序.toml
           grep -Fxq '网络 = []' 言序.toml
           grep -Fxq 'TCP监听 = ["127.0.0.1", "::1", "localhost"]' 言序.toml

@@ -13,7 +13,7 @@ my-service/
 ```
 
 ```sh
-yanbao add web --version '^0.2'
+yanbao add web --version '^1.0'
 ```
 
 应用代码通常把包引为`言枢`：
