@@ -4,7 +4,7 @@ target = "aarch64-apple-darwin"
 generator = "1.1.12"
 
 [root_dependencies]
-yanxu-web = "yanxu-web@1.0.0#a5b4b144f221-3cf6a4a0f57686d1"
+yanxu-web = "yanxu-web@1.0.0#a5b4b144f221-a65727763a02886b"
 "言据" = "言据@1.2.0#9f376cc5bbdb-def74ca3b32fd504"
 
 [root_dev_dependencies]
@@ -26,11 +26,11 @@ minimum_yanxu = ">=1.1.6"
 "默认" = "src/言序HTTP.yx"
 
 [[package]]
-id = "yanxu-web@1.0.0#a5b4b144f221-3cf6a4a0f57686d1"
+id = "yanxu-web@1.0.0#a5b4b144f221-a65727763a02886b"
 name = "yanxu-web"
 version = "1.0.0"
 source = "path:.."
-checksum = "3cf6a4a0f57686d11449c45185147b6f0975d5f98e6278481ec8e1e53d9a3c3f"
+checksum = "a65727763a02886bb05b3361ec5bd1796debee2b83117ab2f1307361fb7dfb79"
 entry = "src/言序Web.yx"
 target = "aarch64-apple-darwin"
 minimum_yanxu = ">=1.1.12"
