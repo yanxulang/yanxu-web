@@ -2,124 +2,148 @@
 
 [![CI](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml/badge.svg)](https://github.com/yanxulang/yanxu-web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Yanxu 1.1.5](https://img.shields.io/badge/言序-1.1.5-b33.svg)](https://github.com/yanxulang/yanxu)
+[![Yanxu 1.1.12](https://img.shields.io/badge/言序-1.1.12-b33.svg)](https://github.com/yanxulang/yanxu)
 
-言枢是面向言序的 Web 应用框架。技术包标识与仓库地址继续使用`yanxu-web`，应用源码建议把它引为`言枢`：
+言枢是言序的 Web 应用框架，技术包名为`yanxu-web`。它把`yanxu-http`的协议对象、`yanxu-html`的安全节点、言据数据交换和言标模板组织成显式、可测试的服务端 API。
 
-```yanxu
-引「包:web」为 言枢；
-```
+当前稳定版本为`1.0.0`：受预算约束的路由与中间件、JSON/言据协商、Cookie、可注入会话存储、同源双提交 CSRF、条件与范围静态响应、显式 OpenAPI 元数据边界，以及与言访互通的无端口测试传输均进入稳定兼容面。
 
-0.2 在原有路由、中间件和开发服务器之上加入配置、命名路由、反向 URL、路由组、自定义状态处理器、JSON 正文、无端口测试客户端，以及内建模板子项目“言标”。
+## 安装
 
-```text
-言枢（yanxu-web）
-├── 应用配置 · 路由组 · 命名路由 · 反向 URL
-├── 请求上下文 · 中间件 · 404/405/500 · 测试客户端
-├── 言标：自动转义 · 条件 · 循环 · 包含 · 模板继承
-├── 静态文件 · 开发服务器
-├── yanxu-html：底层 HTML 节点与安全规则
-└── yanxu-http：HTTP/1.1 请求与响应
-```
-
-## 快速开始
+最低言序版本为`1.1.12`。当前发布线可这样安装：
 
 ```sh
-yanbao add web --version '^0.2'
+yanbao add web --version '^1.0'
 ```
 
-`web`会自动解析为 GitHub 上的`yanxulang/yanxu-web`，并由言包锁定其 HTML 与 HTTP 传递依赖。
+言包会锁定`yanxu-http 1.0.0`、`yanxu-html 1.0.0`、`yanju 1.2.0`和`yanxu-request 1.0.0`及其传递依赖。框架本身不申请出站网络、进程或原生扩展权限；开发服务器只申请清单列出的回环监听地址，静态文件与模板访问受文件权限约束。
+
+## 五分钟示例
 
 ```yanxu
 引「包:web」为 言枢；
 
-定 配置项 为 言枢.配置（）
-    .设应用名（「我的站点」）
-    .设模板根（「templates」）
-    .设静态根（「static」）；
-
-定 应用 为 言枢.创建应用（配置项）；
-
-法 首页（上下文）则
-    归 应用.模板响应（「home.yb.html」，{
-        「标题」：「你好，言枢」，
-        「文章地址」：上下文.反向（「文章详情」，{「id」：「first」}）
+法 首页（上下文） 则
+    归 言枢.协商响应（上下文，{
+        「服务」：「言枢」，
+        「文章」：上下文.反向（「文章详情」，{「id」：「first」}）
     }）；
 终
 
-法 文章（上下文）则
+法 文章（上下文） 则
     归 言枢.JSON响应（{「id」：上下文.参数值（「id」）}）；
 终
 
-应用.命名取（「/」，「首页」，首页）；
+定 应用 为 言枢.创建应用（
+    言枢.配置（）
+        .设应用名（「我的服务」）
+        .设最大请求正文字节（1048576）
+）；
+
+应用.取（「/」，首页）；
 应用.命名取（「/posts/:id」，「文章详情」，文章）；
-应用.挂配置静态（「/static」）；
+
+定 响应 为 言枢.测试客户端（应用）.取（「/posts/first」）；
+若 （响应.状态码 不等于 200） 则
+    抛 「示例请求失败」；
+终
 
 言枢.服务器（应用，「127.0.0.1:8080」）.运行（）；
 ```
 
-`templates/home.yb.html`使用言标语法：
+无需监听端口的言访集成入口位于`包:web/言访测试`：
 
-```html
-<!doctype html>
-<h1>{{ 标题 }}</h1>
-<a href="{{ 文章地址 }}">阅读文章</a>
+```yanxu
+引「包:web/言访测试」为 言访测试；
+
+定 客户端 为 言访测试.客户端（应用）；
+定 响应 为 客户端.取（「/posts/first」）.发送（）.确保成功（）；
 ```
 
-插值默认 HTML 转义。条件、循环、包含和继承都使用中文控制词：
+完整可执行版本见[无端口言访示例](examples/无端口言访.yx)。
 
-```html
-{% 承 base.yb.html %}
-{% 块 主体 %}
-  {% 若 已登录 %}<p>欢迎，{{ 用户.姓名 }}</p>{% 否则 %}<p>请登录</p>{% 终若 %}
-  {% 逐 文章 于 文章列 %}<a href="{{ 文章.url }}">{{ 文章.title }}</a>{% 终逐 %}
-{% 终块 %}
+## 主要能力
+
+- 有序静态路由、`:参数`、末尾`*通配`、命名路由、反向 URL 和路由组；
+- 洋葱式中间件、404/405 分流、统一错误处理和请求/响应正文预算；
+- JSON、规范言据、内容协商、文字、字节、HTML、言标和重定向响应；
+- 可注入会话存储协议、编号轮换、空闲过期与安全 Cookie；
+- 同源检查、双提交令牌和可配置可信来源的 CSRF 中间件；
+- 静态路径隔离、媒体类型、ETag、Last-Modified、条件请求和单范围响应；
+- 显式接口登记、稳定操作标识、隔离快照和可注入 OpenAPI 3.1 提供器；
+- 任意请求首部、字节正文和 Cookie 的无端口测试客户端；
+- 言访自定义传输，保留重定向、HEAD 语义和重复`Set-Cookie`；
+- 言标自动转义、条件、循环、包含、继承和显式可信 HTML 边界。
+
+## 会话与 CSRF
+
+言枢不隐藏全局会话存储。应用必须显式提供实现`会话存储协议`的对象，或用`会话存储适配器（读取法，写入法，删除法）`包装回调：
+
+```yanxu
+定 会话项 为 言枢.会话配置（）
+    .设Cookie名（「__Host-yanxu-session」）
+    .设安全（真）
+    .设仅HTTP（真）
+    .设同站（「Lax」）；
+
+应用.使用（言枢.会话中间件（会话项，存储））；
 ```
 
-## 框架能力
+CSRF 防护采用同源来源检查与双提交 Cookie。它不是认证或授权机制；令牌必须与登录会话、权限校验和 HTTPS 部署共同使用。完整不变量见[安全模型](docs/SECURITY_MODEL.md)。
 
-- `言枢配置`集中管理应用名、模板根、静态根、调试标记和默认 CSP；
-- 静态、`:参数`和末尾`*通配`路由，自动区分 404 与 405；
-- 命名路由、命名空间路由组与百分号编码的反向 URL；
-- GET、POST、PUT、PATCH、DELETE 便捷注册；
-- 洋葱式中间件、可替换 404/405 和统一 500 错误边界；
-- 上下文读取路径、查询、首部、Cookie、正文、JSON、AJAX 标记和应用状态；
-- HTML 节点、言标模板、JSON、言据、文字、字节、重定向和空响应；
-- 静态目录穿越防护与默认安全响应首部；
-- `言枢测试客户端`直接驱动完整应用链，不占用 TCP 端口。
+## OpenAPI 扩展边界
 
-## 言标安全模型
+普通路由不会被自动反射。只有`接口路由/命名接口路由/接口取/接口发`显式登记的操作才进入隔离快照：
 
-`{{ 值 }}`总是 HTML 转义；模板文件中的静态 HTML 原样保留。动态内容只有经`言枢.言标.信任HTML（内容）`显式包装后才能绕过转义。可信包装是审计边界，不是清洗器，不能接收用户、数据库、接口或文件中的未审计内容。
+```yanxu
+定 说明 为 言枢.接口说明（「users.get」）
+    .设摘要（「读取用户」）
+    .设标签（【「用户」】）
+    .设响应（{「200」：{「说明」：「成功」}}）；
 
-模板文件必须使用`.yb.html`扩展名。加载器拒绝绝对路径、反斜杠、NUL、`.`、`..`、循环包含和超过 16 层的包含链，单模板源码上限为 256 KiB。
+应用.接口取（「/users/:id」，说明，读取用户）；
+定 文档 为 应用.生成OpenAPI（提供器）；
+应用.挂OpenAPI（「/openapi.json」，提供器）；
+```
 
-完整语法见[言标参考](docs/yanbiao.md)。
+框架只负责登记、隔离、预算和 HTTP 输出，不猜测 Schema，也不把普通处理器源码反射为规范。提供器负责把框架快照转换成 OpenAPI 文档。
 
-## 安装与测试
+## 错误处理
+
+领域错误使用稳定前缀，例如`WEB_ROUTE`、`YANSHU_YANJU_BODY`、`YANSHU_SESSION_*`、`YANSHU_CSRF_*`、`YANSHU_STATIC_*`和`YANSHU_OPENAPI_*`。程序判断应读取`错误详情（错误）【「代码」】`，不要匹配中文消息。
+
+默认错误处理器不会把内部异常详情写入 HTTP 响应。生产应用仍需注入结构化日志、请求编号、认证、授权、速率限制和敏感数据脱敏。
+
+## 开发验证
+
+从言序多仓总工作区执行：
 
 ```sh
-git clone https://github.com/yanxulang/yanxu-web.git
-yanbao install --manifest-path yanxu-web
-yanxu 查 yanxu-web/src/言序Web.yx
-yanxu 试 yanxu-web/tests --并发 1 --json
+/tmp/yanxu-v1.1.12/target/release/yanxu 查 yanxu-libraries-workspace/repos/yanxu-web/src/言序Web.yx
+/tmp/yanxu-v1.1.12/target/release/yanxu 查 yanxu-libraries-workspace/repos/yanxu-web/src/言访测试.yx
+/tmp/yanxu-v1.1.12/target/release/yanxu 试 yanxu-libraries-workspace/repos/yanxu-web/tests --并发 1 --json
+YANXU_BIN=/tmp/yanxu-v1.1.12/target/release/yanxu yanbao build --manifest-path yanxu-libraries-workspace/repos/yanxu-web --release
 ```
 
-言包按`言序.toml`安装`yanxu-html`和`yanxu-http`，`言序.lock`固定精确提交与内容校验。并发规格会让多个进程同时检出同一 Git 缓存，因此仓库门禁使用`--并发 1`。
+包解析、锁文件和共享缓存操作必须串行执行。示例与基准命令见[使用指南](docs/GUIDE.md)和[性能说明](docs/PERFORMANCE.md)。
 
-## 兼容与边界
+## 已知限制
 
-0.1 的`Web.应用()`、`Web应用`、`Web上下文`、`Web开发服务器`和响应工厂继续可用；新代码建议使用“言枢”模块别名、`创建应用`、`言枢应用`、`言枢上下文`和`服务器`。迁移清单见[0.2 迁移说明](docs/migration-0.2.md)。
+内建服务器是开发与集成边界：串行接受连接、每连接处理一个 HTTP/1.1 请求并关闭。它不提供 TLS、HTTP/2/3、长连接工作池、流式上传、生产代理信任、跨进程会话、分布式限流或优雅重启。生产部署应由成熟前置服务器终止 TLS，并按[架构说明](docs/ARCHITECTURE.md)处理这些职责。
 
-开发服务器仍是串行 HTTP/1.1、一连接一请求、`Connection: close`模型，适合本地开发、教学和集成验证，不承诺 TLS、并发工作池、长连接、流式上传、生产日志或优雅重启。
+OpenAPI 是扩展边界而非内建全自动生成器；会话存储是协议而非内置数据库；言访测试传输把任意 HTTP(S) 主机映射到同一个内存应用，不模拟 DNS、TLS 或网络时延。
 
 ## 文档
 
-- [入门教程](docs/getting-started.md)
-- [公开 API](docs/api.md)
+- [使用指南](docs/GUIDE.md)
+- [公开 API](docs/API.md)
+- [完整机器 API 参考](docs/API_REFERENCE.md)
+- [架构](docs/ARCHITECTURE.md)
+- [迁移到 1.0](docs/MIGRATION.md)
+- [兼容矩阵](COMPATIBILITY.md)
+- [安全模型](docs/SECURITY_MODEL.md)
+- [性能与基准](docs/PERFORMANCE.md)
 - [言标语法](docs/yanbiao.md)
-- [架构与请求生命周期](docs/architecture.md)
-- [0.2 迁移说明](docs/migration-0.2.md)
-- [完整言枢博客](https://github.com/yanxulang/yanxu-webblog)
+- [贡献指南](CONTRIBUTING.md)
 
-当前版本为`0.2.1`，并以清单格式 2 显式导出默认框架模块与`言标`子模块。按[MIT License](LICENSE)发布。
+言枢按[MIT License](LICENSE)发布。安全问题请按[安全策略](SECURITY.md)私下报告。

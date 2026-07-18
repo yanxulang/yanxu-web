@@ -1,13 +1,10 @@
 lock_version = 2
-manifest_checksum = "043b7f317c7a99ae4c0cb568e2b64409dde891bd03689b20ce011f4754c9c8c1"
+manifest_checksum = "4fe39340e38375f83fea505532940d3ba400835936027567faff020bc74e5a34"
 target = "aarch64-apple-darwin"
 generator = "1.1.12"
 
 [root_dependencies]
-yanxu-http = "yanxu-http@1.0.0#17696d671b00-fb51be37d161486e"
-"言据" = "言据@1.2.0#9f376cc5bbdb-def74ca3b32fd504"
-"言访" = "言访@1.0.0#15e56e584494-260517f98c8b7269"
-"言页" = "言页@1.0.0#99332c12d990-c4335ec2dc93fb71"
+yanxu-web = "yanxu-web@1.0.0#a5b4b144f221-b67056ced8870c82"
 
 [root_dev_dependencies]
 
@@ -26,6 +23,27 @@ minimum_yanxu = ">=1.1.6"
 
 [package.exports]
 "默认" = "src/言序HTTP.yx"
+
+[[package]]
+id = "yanxu-web@1.0.0#a5b4b144f221-b67056ced8870c82"
+name = "yanxu-web"
+version = "1.0.0"
+source = "path:.."
+checksum = "b67056ced8870c827c2ec6b1686452ff966c87ffda97873fbdd7273bdcf680fc"
+entry = "src/言序Web.yx"
+target = "aarch64-apple-darwin"
+minimum_yanxu = ">=1.1.12"
+
+[package.dependencies]
+yanxu-http = "yanxu-http@1.0.0#17696d671b00-fb51be37d161486e"
+"言据" = "言据@1.2.0#9f376cc5bbdb-def74ca3b32fd504"
+"言访" = "言访@1.0.0#15e56e584494-260517f98c8b7269"
+"言页" = "言页@1.0.0#99332c12d990-c4335ec2dc93fb71"
+
+[package.exports]
+"言标" = "src/言标.yx"
+"言访测试" = "src/言访测试.yx"
+"默认" = "src/言序Web.yx"
 
 [[package]]
 id = "言录@1.0.0#4aa44851d793-c54abeddd65b8ba4"
